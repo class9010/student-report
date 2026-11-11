@@ -6,6 +6,8 @@
   <title>어센트 잉글리시 - 월간 리포트 V5.1</title>
   <!-- Excel 파일 처리를 위한 SheetJS 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   
   <style>
     :root {
@@ -176,7 +178,7 @@
        =============================== */
     .report {
       width: 210mm; height: 297mm; min-width: 210mm; min-height: 297mm; max-width: 210mm; max-height: 297mm;
-      padding: 12mm 14mm; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 4px;
+      padding: 12mm 14mm; background: var(--surface-color); border: 1.5px solid var(--header-bg); border-radius: 4px;
       box-shadow: 0 12px 36px rgba(18, 30, 45, 0.14); display: flex; flex-direction: column; justify-content: space-between;
       overflow: hidden; box-sizing: border-box; position: relative; transform-origin: top center; transition: transform 0.2s ease;
     }
@@ -208,7 +210,7 @@
       flex-direction: column;
       justify-content: space-between;
       box-shadow: 0 4px 14px rgba(18, 30, 45, 0.03);
-      border: 1px solid var(--border-color);
+      border: 1.5px solid var(--header-bg);
       position: relative;
       overflow: hidden;
     }
@@ -362,18 +364,18 @@
 
     .note {
       white-space: pre-wrap; font-size: 11px; line-height: 1.5; background: var(--kpi-bg);
-      padding: 8px 10px; border-radius: 9px; border: 1px solid var(--kpi-border); word-break: keep-all; overflow-wrap: break-word;
+      padding: 8px 10px; border-radius: 9px; border: 1.5px solid var(--header-bg); word-break: keep-all; overflow-wrap: break-word;
     }
     .note:empty:before { content: "—"; color: var(--text-secondary); }
     
     .skill-analysis {
-      display: grid; grid-template-columns: 185px 1fr; gap: 14px; align-items: center;
-      background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 14px;
+      display: grid; grid-template-columns: 205px 1fr; gap: 12px; align-items: center;
+      background: var(--surface-color); border: 1.5px solid var(--header-bg); border-radius: 14px;
       padding: 16px 14px; margin-bottom: 8px; flex-shrink: 0;
     }
-    .radar-container { width: 100%; max-width: 185px; aspect-ratio: 1 / 1; margin: 0 auto; }
+    .radar-container { width: 100%; max-width: 205px; aspect-ratio: 280 / 230; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
     .groups { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 10px; width: 100%; }
-    .group { border: 1px solid var(--border-color); border-radius: 9px; padding: 10px 10px; background: var(--kpi-bg); }
+    .group { border: 1px solid var(--header-bg); border-radius: 9px; padding: 10px 10px; background: var(--kpi-bg); }
     .group-head { display: flex; justify-content: space-between; font-weight: 800; font-size: 11.5px; margin-bottom: 7px; }
     .group-head-label { display: inline-flex; align-items: center; gap: 5px; }
     .skill-icon { width: 13px; height: 13px; color: var(--accent-hover); flex: 0 0 auto; }
@@ -397,10 +399,10 @@
     .materials { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 11px; margin: 2px 0 8px; flex-shrink: 0; }
     .materials > div { display: flex; flex-direction: column; }
     .materials b { margin-bottom: 4px; font-size: 11px; color: var(--header-bg); display: flex; align-items: center; gap: 5px; }
-    .materials .note { height: 72px; max-height: 72px; padding: 10px 12px; }
+    .materials .note { height: 72px; max-height: 72px; padding: 10px 12px; border: 1.5px solid var(--header-bg); }
     
     .feedback-card {
-      background: linear-gradient(135deg, #fdfcf9, #f7f6f2); border: 1px solid var(--border-color);
+      background: linear-gradient(135deg, #fdfcf9, #f7f6f2); border: 1.5px solid var(--header-bg);
       padding: 12px 14px; border-radius: 12px; margin-top: 2px; margin-bottom: 6px; flex: 0 1 180px; min-height: 120px; display: flex; flex-direction: column;
     }
     .feedback-card .note { background: transparent; border: none; padding: 0; font-size: 11.5px; line-height: 1.55; color: var(--text-primary); flex: 1; min-height: 0; }
@@ -414,11 +416,281 @@
     }
     @media(max-width: 768px) {
       header { padding: 14px 16px; justify-content: center; }
-      .view-tabs { width: 100%; justify-content: center; }
-      .view-tab { flex: 1; justify-content: center; padding: 8px 8px; font-size: 12px; }
+      .view-tabs { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .view-tab { min-width: 0; justify-content: center; padding: 8px 6px; font-size: 12px; }
       .actions { width: 100%; justify-content: stretch; }
       .actions button { flex: 1; justify-content: center; }
     }
+
+    /* ===============================
+       모바일 보기 전용 (가독성 최우선 1단 세로 스크롤 레이아웃)
+       =============================== */
+    main[data-view="mobile"] {
+      grid-template-columns: minmax(0, 1fr);
+      max-width: 500px;
+      margin: 16px auto 48px;
+      padding: 0 14px;
+    }
+    main[data-view="mobile"] .panel { display: none !important; }
+    main[data-view="mobile"] .report-wrapper {
+      width: 100%; min-height: 0; padding: 0; overflow: visible; background: transparent;
+      border: 0; border-radius: 0; box-shadow: none; align-items: stretch;
+    }
+    main[data-view="mobile"] .preview-toolbar { display: none; }
+    main[data-view="mobile"] .mobile-export-toolbar { display: flex; }
+    main[data-view="mobile"] .report-scale-stage { width: 100%; height: auto !important; overflow: visible; }
+    
+    main[data-view="mobile"] .report,
+    #imageExportStage .report {
+      width: 100%; height: auto; min-width: 0; min-height: 0; max-width: none; max-height: none;
+      padding: 26px 20px; border-radius: 20px; box-shadow: 0 12px 32px rgba(18, 30, 45, 0.1);
+      justify-content: flex-start; gap: 18px; overflow: visible; transform: none !important; transition: none;
+    }
+    main[data-view="mobile"] .report-top-bar,
+    #imageExportStage .report-top-bar {
+      margin-bottom: 2px; padding-bottom: 14px; gap: 12px;
+    }
+    main[data-view="mobile"] .report-header svg,
+    #imageExportStage .report-header svg {
+      width: 48px; height: 48px;
+    }
+    main[data-view="mobile"] .report-title-area h3,
+    #imageExportStage .report-title-area h3 {
+      font-size: 12px; margin-bottom: 4px;
+    }
+    main[data-view="mobile"] .report-title-area h2,
+    #imageExportStage .report-title-area h2 {
+      font-size: 25px;
+    }
+    main[data-view="mobile"] .report-title-area p,
+    #imageExportStage .report-title-area p {
+      font-size: 13px; margin-top: 3px;
+    }
+
+    /* 상단 프로필과 학습 현황을 위아래 1단으로 시원하게 분리 */
+    main[data-view="mobile"] .top-summary-grid,
+    #imageExportStage .top-summary-grid {
+      grid-template-columns: 1fr; gap: 14px; margin-bottom: 2px;
+    }
+    main[data-view="mobile"] .student-card,
+    #imageExportStage .student-card {
+      padding: 18px 20px; border-radius: 16px; gap: 12px;
+    }
+    main[data-view="mobile"] .profile-icon,
+    #imageExportStage .profile-icon {
+      width: 50px; height: 50px;
+    }
+    main[data-view="mobile"] .profile-icon svg,
+    #imageExportStage .profile-icon svg {
+      width: 24px; height: 24px;
+    }
+    main[data-view="mobile"] .student-info-left,
+    #imageExportStage .student-info-left {
+      gap: 14px;
+    }
+    main[data-view="mobile"] .student-badge,
+    #imageExportStage .student-badge {
+      font-size: 10px; margin-bottom: 3px;
+    }
+    main[data-view="mobile"] .student-name,
+    #imageExportStage .student-name {
+      font-size: 20px; margin-bottom: 3px;
+    }
+    main[data-view="mobile"] .student-class,
+    #imageExportStage .student-class {
+      font-size: 13.5px;
+    }
+    main[data-view="mobile"] .student-month,
+    #imageExportStage .student-month {
+      font-size: 13px; padding-top: 12px; margin-top: 4px;
+    }
+    main[data-view="mobile"] .student-month svg,
+    #imageExportStage .student-month svg {
+      width: 15px; height: 15px;
+    }
+    main[data-view="mobile"] .student-month b,
+    #imageExportStage .student-month b {
+      font-size: 14px;
+    }
+
+    /* 이번 달 학습 현황 모바일 최적화 */
+    main[data-view="mobile"] .status-card,
+    #imageExportStage .status-card {
+      padding: 20px 18px; border-radius: 16px; gap: 16px;
+    }
+    main[data-view="mobile"] .status-card-header,
+    #imageExportStage .status-card-header {
+      padding-bottom: 10px;
+    }
+    main[data-view="mobile"] .status-card-title,
+    #imageExportStage .status-card-title {
+      font-size: 15px; gap: 8px;
+    }
+    main[data-view="mobile"] .status-card-title svg,
+    #imageExportStage .status-card-title svg {
+      width: 18px; height: 18px;
+    }
+    main[data-view="mobile"] .status-card-sub,
+    #imageExportStage .status-card-sub {
+      font-size: 10px;
+    }
+    main[data-view="mobile"] .status-content,
+    #imageExportStage .status-content {
+      grid-template-columns: 1fr; gap: 16px;
+    }
+    main[data-view="mobile"] .donut-wrap,
+    #imageExportStage .donut-wrap {
+      justify-content: center; padding: 4px 0 12px; border-right: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    main[data-view="mobile"] .donut-container,
+    #imageExportStage .donut-container {
+      width: 96px; height: 96px;
+    }
+    main[data-view="mobile"] .donut-container svg,
+    #imageExportStage .donut-container svg {
+      width: 96px; height: 96px;
+    }
+    main[data-view="mobile"] .donut-val,
+    #imageExportStage .donut-val {
+      font-size: 22px;
+    }
+    main[data-view="mobile"] .donut-label,
+    #imageExportStage .donut-label {
+      font-size: 10.5px; margin-top: 4px;
+    }
+    main[data-view="mobile"] .status-list,
+    #imageExportStage .status-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+    }
+    main[data-view="mobile"] .status-item,
+    #imageExportStage .status-item {
+      padding: 12px 10px; gap: 8px; border-radius: 12px; text-align: center;
+    }
+    main[data-view="mobile"] .status-item-top,
+    #imageExportStage .status-item-top {
+      justify-content: center; gap: 5px; font-size: 12px;
+    }
+    main[data-view="mobile"] .check-icon,
+    #imageExportStage .check-icon {
+      width: 16px; height: 16px; font-size: 10px;
+    }
+    main[data-view="mobile"] .status-item b,
+    #imageExportStage .status-item b {
+      font-size: 17px; text-align: center;
+    }
+    main[data-view="mobile"] .status-mini-bar,
+    #imageExportStage .status-mini-bar {
+      height: 5px;
+    }
+
+    /* 섹션 제목 모바일 확대 */
+    main[data-view="mobile"] .section-title,
+    #imageExportStage .section-title {
+      font-size: 15px; margin: 6px 0 2px; padding-bottom: 8px; gap: 8px;
+    }
+    main[data-view="mobile"] .section-title svg,
+    #imageExportStage .section-title svg {
+      width: 18px; height: 18px;
+    }
+
+    /* SKILL REVIEW 1단 카드형 배치로 막대그래프와 텍스트 시인성 극대화 */
+    main[data-view="mobile"] .skill-analysis,
+    #imageExportStage .skill-analysis {
+      grid-template-columns: 1fr !important; gap: 20px; padding: 22px 16px; margin-bottom: 2px; border-radius: 16px;
+    }
+    main[data-view="mobile"] .radar-container,
+    #imageExportStage .radar-container {
+      max-width: 290px;
+      width: 100%;
+      aspect-ratio: 280 / 230;
+    }
+    main[data-view="mobile"] .groups,
+    #imageExportStage .groups {
+      grid-template-columns: 1fr; gap: 12px;
+    }
+    main[data-view="mobile"] .group,
+    #imageExportStage .group {
+      padding: 14px 16px; border-radius: 12px;
+    }
+    main[data-view="mobile"] .group-head,
+    #imageExportStage .group-head {
+      font-size: 15px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color);
+    }
+    main[data-view="mobile"] .skill-icon,
+    #imageExportStage .skill-icon {
+      width: 17px; height: 17px;
+    }
+    main[data-view="mobile"] .group-head em,
+    #imageExportStage .group-head em {
+      font-size: 14px;
+    }
+    main[data-view="mobile"] .barrow,
+    #imageExportStage .barrow {
+      grid-template-columns: 144px 1fr 26px; gap: 10px; font-size: 13.5px; margin: 10px 0;
+    }
+    main[data-view="mobile"] .barrow span,
+    #imageExportStage .barrow span {
+      overflow: visible; text-overflow: clip; line-height: 1.35;
+    }
+    main[data-view="mobile"] .track,
+    #imageExportStage .track {
+      height: 10px; border-radius: 5px;
+    }
+    main[data-view="mobile"] .fill,
+    #imageExportStage .fill {
+      border-radius: 5px;
+    }
+    main[data-view="mobile"] .barrow b,
+    #imageExportStage .barrow b {
+      font-size: 14px;
+    }
+
+    /* 학습 자료 및 내용, 피드백 카드 모바일 가독성 개선 */
+    main[data-view="mobile"] .materials,
+    #imageExportStage .materials {
+      width: 100%; grid-template-columns: 1fr; gap: 14px; margin: 0;
+    }
+    main[data-view="mobile"] .materials b,
+    #imageExportStage .materials b {
+      font-size: 14px; margin-bottom: 6px; gap: 6px;
+    }
+    main[data-view="mobile"] .materials b svg,
+    #imageExportStage .materials b svg {
+      width: 15px; height: 15px;
+    }
+    main[data-view="mobile"] .materials .note,
+    #imageExportStage .materials .note {
+      height: auto; min-height: 76px; max-height: none; padding: 14px 16px;
+      font-size: 14px !important; line-height: 1.7; border-radius: 12px;
+    }
+    main[data-view="mobile"] .feedback-card,
+    #imageExportStage .feedback-card {
+      flex: none; min-height: 0; margin: 0; padding: 18px 18px; border-radius: 14px;
+    }
+    main[data-view="mobile"] .feedback-card .note,
+    #imageExportStage .feedback-card .note {
+      flex: none; min-height: 0; overflow: visible;
+      font-size: 14.5px !important; line-height: 1.75;
+    }
+    main[data-view="mobile"] .foot,
+    #imageExportStage .foot {
+      margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--border-color);
+      text-align: center; font-size: 11px;
+    }
+
+    .mobile-export-toolbar {
+      display: none; flex-direction: column; width: 100%; gap: 10px;
+      margin: 0 auto 14px; padding: 14px 16px; border: 1px solid var(--border-color);
+      border-radius: 14px; background: var(--surface-color); box-shadow: 0 4px 14px rgba(18, 30, 45, 0.05);
+    }
+    .mobile-export-heading { font-size: 13px; font-weight: 800; color: var(--header-bg); }
+    .mobile-export-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .mobile-export-buttons .btn-small { min-height: 40px; font-size: 12.5px; white-space: normal; }
+    .mobile-export-status { min-height: 16px; font-size: 11.5px; color: var(--text-secondary); }
+    #imageExportStage { position: fixed; left: -10000px; top: 0; width: 480px; pointer-events: none; }
+    #imageExportStage .report { width: 100% !important; }
+    body.image-exporting #reportWrapper { visibility: hidden; }
 
     #printContainer { display: none; }
     
@@ -428,7 +700,7 @@
         width: 210mm; margin: 0 !important; padding: 0 !important; background: #fff !important;
         --bg-color: #fff; --surface-color: #fff; --text-primary: #111; --border-color: #e2dfd8;
       }
-      header, .top-workspace-bar, .panel, .preview-toolbar { display: none !important; }
+      header, .top-workspace-bar, .panel, .preview-toolbar, .mobile-export-toolbar, #imageExportStage { display: none !important; }
       main { display: block !important; margin: 0 !important; padding: 0 !important; max-width: none !important; }
       main[data-view="form"] .report-wrapper { display: block !important; }
       
@@ -479,6 +751,10 @@
       <button type="button" class="view-tab" data-mode="preview" onclick="setViewMode('preview')">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         A4 전용 보기
+      </button>
+      <button type="button" class="view-tab" data-mode="mobile" onclick="setViewMode('mobile')">
+        <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        모바일 보기
       </button>
     </div>
 
@@ -596,6 +872,16 @@
           <button type="button" class="zoom-btn" data-zoom="1" onclick="setPreviewZoom(1)">100%</button>
           <button type="button" class="zoom-btn" data-zoom="1.15" onclick="setPreviewZoom(1.15)">115%</button>
         </div>
+      </div>
+      <div class="mobile-export-toolbar" aria-label="모바일 공유용 저장">
+        <div class="mobile-export-heading">모바일 공유용 저장</div>
+        <div class="mobile-export-buttons">
+          <button type="button" class="btn-small" onclick="printCurrent()">현재 학생 PDF</button>
+          <button type="button" class="btn-small" onclick="printAll()">전체 학생 PDF</button>
+          <button type="button" class="btn-small" onclick="exportCurrentImage()">현재 학생 이미지</button>
+          <button type="button" class="btn-small" onclick="exportAllImages()">전체 학생 이미지 (ZIP)</button>
+        </div>
+        <div class="mobile-export-status" id="mobileExportStatus" aria-live="polite"></div>
       </div>
       <div class="report-scale-stage" id="reportScaleStage">
         <section class="report" id="reportTemplate">
@@ -738,6 +1024,7 @@
         </section>
       </div>
     </div>
+    <div id="imageExportStage" aria-hidden="true"></div>
   </main>
 
   <div id="printContainer"></div>
@@ -983,23 +1270,32 @@
     }
 
     function adjustAllNarrativeFonts() {
-      fitTextToBox(document.querySelector('#pmaterials'), 12, 8.5);
-      fitTextToBox(document.querySelector('#ptopics'), 12, 8.5);
-      fitTextToBox(document.querySelector('#pcomment'), 13, 8.5);
+      const mEl = document.querySelector('#pmaterials');
+      const tEl = document.querySelector('#ptopics');
+      const cEl = document.querySelector('#pcomment');
+      if (currentViewMode === 'mobile') {
+        if (mEl) mEl.style.fontSize = '14px';
+        if (tEl) tEl.style.fontSize = '14px';
+        if (cEl) cEl.style.fontSize = '14.5px';
+        return;
+      }
+      fitTextToBox(mEl, 12, 8.5);
+      fitTextToBox(tEl, 12, 8.5);
+      fitTextToBox(cEl, 13, 8.5);
     }
 
-    // 축선과 꼭짓점 포인트까지 완벽하게 복원된 육각형 레이더 차트
+    // 이미지 내보내기(html2canvas) 시 좌우·상하 라벨이 절대 잘리지 않도록 viewBox 여백을 확장한 육각형 레이더 차트
     function drawRadarChart(scores, labels, container) {
       if(!container) return;
-      const size = 220, center = size / 2, radius = size / 2 - 32, sides = labels.length;
-      let svg = `<svg width="100%" height="100%" viewBox="0 0 ${size} ${size}" style="overflow:visible">`;
+      const vbW = 280, vbH = 230, centerX = vbW / 2, centerY = vbH / 2, radius = 72, sides = labels.length;
+      let svg = `<svg width="100%" height="100%" viewBox="0 0 ${vbW} ${vbH}" style="overflow:visible; display:block;">`;
       
       // 5단계 육각형 배경망
       for(let i=1; i<=5; i++) {
          let r = radius * (i/5), points = [];
          for(let j=0; j<sides; j++) {
            let angle = (Math.PI * 2 * j / sides) - Math.PI/2;
-           points.push(`${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`);
+           points.push(`${centerX + r * Math.cos(angle)},${centerY + r * Math.sin(angle)}`);
          }
          svg += `<polygon points="${points.join(' ')}" fill="none" stroke="#e2dfd8" stroke-width="${i===5 ? 1.8 : 1}"/>`;
       }
@@ -1007,21 +1303,21 @@
       // 중심에서 각 꼭짓점으로 뻗는 축선
       for(let j=0; j<sides; j++) {
          let angle = (Math.PI * 2 * j / sides) - Math.PI/2;
-         svg += `<line x1="${center}" y1="${center}" x2="${center + radius * Math.cos(angle)}" y2="${center + radius * Math.sin(angle)}" stroke="#e2dfd8" stroke-width="1"/>`;
+         svg += `<line x1="${centerX}" y1="${centerY}" x2="${centerX + radius * Math.cos(angle)}" y2="${centerY + radius * Math.sin(angle)}" stroke="#e2dfd8" stroke-width="1"/>`;
       }
 
       let dataPoints = [];
       scores.forEach((score, j) => {
          let val = score || 0, r = radius * (val/5), angle = (Math.PI * 2 * j / sides) - Math.PI/2;
-         dataPoints.push(`${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`);
+         dataPoints.push(`${centerX + r * Math.cos(angle)},${centerY + r * Math.sin(angle)}`);
          
-         let labelR = radius + 17;
-         let lx = center + labelR * Math.cos(angle), ly = center + labelR * Math.sin(angle);
+         let labelR = radius + 14;
+         let lx = centerX + labelR * Math.cos(angle), ly = centerY + labelR * Math.sin(angle);
          let anchor = 'middle';
          if (Math.abs(Math.cos(angle)) > 0.15) anchor = Math.cos(angle) > 0 ? 'start' : 'end';
-         if (Math.sin(angle) > 0.5) ly += 6;
+         if (Math.sin(angle) > 0.5) ly += 7;
          else if (Math.sin(angle) < -0.5) ly -= 3;
-         svg += `<text x="${lx}" y="${ly + 3}" text-anchor="${anchor}" fill="#1a1a1a" font-size="9.5" font-weight="700">${labels[j]}</text>`;
+         svg += `<text x="${lx}" y="${ly + 3}" text-anchor="${anchor}" fill="#121e2d" font-size="10" font-weight="800" font-family="Inter, Noto Sans KR, sans-serif">${labels[j]}</text>`;
       });
 
       svg += `<polygon points="${dataPoints.join(' ')}" fill="#c8a97e" fill-opacity="0.25" stroke="#c8a97e" stroke-width="2"/>`;
@@ -1029,7 +1325,7 @@
       // 꼭짓점 포인트 원형 마커
       scores.forEach((score, j) => {
          let val = score || 0, r = radius * (val/5), angle = (Math.PI * 2 * j / sides) - Math.PI/2;
-         let cx = center + r * Math.cos(angle), cy = center + r * Math.sin(angle);
+         let cx = centerX + r * Math.cos(angle), cy = centerY + r * Math.sin(angle);
          svg += `<circle cx="${cx}" cy="${cy}" r="3.5" fill="#121e2d" stroke="#fff" stroke-width="1.3"/>`;
       });
 
@@ -1133,11 +1429,144 @@
       selectStudent(0);
     }
 
-    function printCurrent() { window.print(); }
+    function setMobileExportStatus(message) {
+      const status = document.getElementById('mobileExportStatus');
+      if (status) status.textContent = message;
+    }
+
+    function setMobileExportBusy(isBusy) {
+      document.querySelectorAll('.mobile-export-buttons button').forEach(button => { button.disabled = isBusy; });
+    }
+
+    function safeFileName(value) {
+      return String(value || '학생').trim().replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_') || '학생';
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    function nextPaint() {
+      return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }
+
+    async function renderMobileReportCanvas(index) {
+      currentIndex = index;
+      renderReport();
+      await nextPaint();
+      const stage = document.getElementById('imageExportStage');
+      stage.innerHTML = '';
+      const clone = document.getElementById('reportTemplate').cloneNode(true);
+      clone.removeAttribute('id');
+      clone.classList.add('mobile-export-report');
+      stage.appendChild(clone);
+      await nextPaint();
+      // html2canvas 캡처 시 SVG viewBox 외부 클리핑을 방지하기 위해 렌더된 픽셀 크기를 명시
+      clone.querySelectorAll('.radar-container svg').forEach(svgEl => {
+        const rect = svgEl.getBoundingClientRect();
+        if (rect.width && rect.height) {
+          svgEl.setAttribute('width', Math.round(rect.width));
+          svgEl.setAttribute('height', Math.round(rect.height));
+        }
+      });
+      return html2canvas(clone, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, windowWidth: 480 });
+    }
+
+    async function exportCurrentImage() {
+      if (typeof window.html2canvas !== 'function') {
+        showNotice('이미지 저장 기능을 불러오지 못했습니다. 인터넷 연결 후 다시 시도해 주세요.');
+        return;
+      }
+      const originalIndex = currentIndex;
+      const originalMode = currentViewMode;
+      setMobileExportBusy(true);
+      setMobileExportStatus('현재 학생 이미지를 만드는 중입니다…');
+      try {
+        setViewMode('mobile');
+        const canvas = await renderMobileReportCanvas(originalIndex);
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('PNG 변환에 실패했습니다.');
+        const student = students[originalIndex] || {};
+        downloadBlob(blob, `${safeFileName(student.name)}_월간학습리포트.png`);
+        setMobileExportStatus('현재 학생 PNG 저장을 시작했습니다.');
+      } catch (error) {
+        console.error(error);
+        showNotice('이미지를 저장하지 못했습니다. 다시 시도해 주세요.');
+        setMobileExportStatus('이미지 저장에 실패했습니다.');
+      } finally {
+        document.getElementById('imageExportStage').innerHTML = '';
+        currentIndex = originalIndex;
+        renderReport();
+        setViewMode(originalMode);
+        setMobileExportBusy(false);
+      }
+    }
+
+    async function exportAllImages() {
+      if (typeof window.html2canvas !== 'function' || typeof window.JSZip !== 'function') {
+        showNotice('이미지 저장 기능을 불러오지 못했습니다. 인터넷 연결 후 다시 시도해 주세요.');
+        return;
+      }
+      const originalIndex = currentIndex;
+      const originalMode = currentViewMode;
+      const total = students.length;
+      if (!total) return;
+      setMobileExportBusy(true);
+      setMobileExportStatus(`전체 ${total}명의 이미지를 준비하고 있습니다…`);
+      setViewMode('mobile');
+      document.body.classList.add('image-exporting');
+      try {
+        const zip = new JSZip();
+        for (let index = 0; index < total; index++) {
+          setMobileExportStatus(`${index + 1} / ${total}명 이미지 생성 중…`);
+          const canvas = await renderMobileReportCanvas(index);
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (!blob) throw new Error(`학생 ${index + 1} PNG 변환 실패`);
+          const student = students[index] || {};
+          const number = String(index + 1).padStart(2, '0');
+          zip.file(`${number}_${safeFileName(student.name)}_월간학습리포트.png`, blob);
+        }
+        setMobileExportStatus('PNG 파일을 하나의 ZIP으로 묶고 있습니다…');
+        const archive = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+        downloadBlob(archive, '어센트_월간학습리포트_전체학생_이미지.zip');
+        setMobileExportStatus('학생별 PNG가 담긴 ZIP 저장을 시작했습니다.');
+      } catch (error) {
+        console.error(error);
+        showNotice('전체 학생 이미지 저장에 실패했습니다. 다시 시도해 주세요.');
+        setMobileExportStatus('이미지 저장에 실패했습니다.');
+      } finally {
+        document.body.classList.remove('image-exporting');
+        document.getElementById('imageExportStage').innerHTML = '';
+        currentIndex = originalIndex;
+        renderReport();
+        setViewMode(originalMode);
+        setMobileExportBusy(false);
+      }
+    }
+
+    function printCurrent() {
+      const originalMode = currentViewMode;
+      if (originalMode === 'mobile') {
+        setViewMode('preview');
+        setTimeout(() => { window.print(); setViewMode(originalMode); }, 120);
+      } else {
+        window.print();
+      }
+    }
+
     function printAll() {
       if(!students.length) return;
       const printContainer = document.getElementById('printContainer');
       printContainer.innerHTML = '';
+      const originalMode = currentViewMode;
+      if (originalMode === 'mobile') setViewMode('preview');
       let bk = currentIndex;
       students.forEach((s, idx) => {
         currentIndex = idx; renderReport();
@@ -1147,7 +1576,12 @@
       });
       currentIndex = bk; renderReport();
       document.body.classList.add('print-all');
-      setTimeout(() => { window.print(); document.body.classList.remove('print-all'); printContainer.innerHTML = ''; }, 500);
+      setTimeout(() => {
+        window.print();
+        document.body.classList.remove('print-all');
+        printContainer.innerHTML = '';
+        if (originalMode === 'mobile') setViewMode('mobile');
+      }, 500);
     }
 
     loadFromLocal();
